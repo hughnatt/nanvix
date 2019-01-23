@@ -202,7 +202,7 @@
     	int priority;            /**< Process priorities.     */
     	int nice;                /**< Nice for scheduling.    */
     	unsigned alarm;          /**< Alarm.                  */
-		//unsigned ticket;		 /**< Ticket.                 */
+		unsigned ticket;		 /**< Ticket.                 */
 		struct process *next;    /**< Next process in a list. */
 		struct process **chain;  /**< Sleeping chain.         */
 		/**@}*/

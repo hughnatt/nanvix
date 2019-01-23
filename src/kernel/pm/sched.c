@@ -22,6 +22,7 @@
 #include <nanvix/const.h>
 #include <nanvix/hal.h>
 #include <nanvix/pm.h>
+#include <nanvix/klib.h>
 #include <signal.h>
 
 /**
@@ -60,16 +61,6 @@ PUBLIC void resume(struct process *proc)
 }
 
 /**
- * @brief Calculate the mixed-priority of a process.
- * 
- * @return Priority value. The lower value,the higher priority.
- */
-PUBLIC int priority(struct process *proc)
-{
-	return (proc->priority + proc->nice - proc->counter);
-}
-
-/**
  * @brief Yields the processor.
  */
 PUBLIC void yield(void)
@@ -98,28 +89,30 @@ PUBLIC void yield(void)
 
 	/* Choose a process to run next. */
 	next = IDLE;
+	unsigned ready_tickets = 0;
 	for (p = FIRST_PROC; p <= LAST_PROC; p++)
 	{
 		/* Skip non-ready process. */
 		if (p->state != PROC_READY)
 			continue;
 
-		/*
-		 * Process with higher
-		 * waiting time found.
-		 */
-		if (priority(p) < priority(next))
-		{
-			next->counter++;
-			next = p;
-		}
+		ready_tickets += p->ticket;
+	}
 
-		/*
-		 * Increment waiting
-		 * time of process.
-		 */
-		else
-			p->counter++;
+	unsigned rticket = krand()%(ready_tickets-1);
+	unsigned cdn = 0;
+	for (p = FIRST_PROC; p <= LAST_PROC; p++)
+	{
+		/* Skip non-ready process. */
+		if (p->state != PROC_READY)
+			continue;
+
+		cdn += p->ticket;
+
+		if (rticket <= cdn){
+			next = p;
+			break;
+		}
 	}
 
 	/* Switch to next process. */

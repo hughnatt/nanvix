@@ -25,6 +25,9 @@
 
 	/* Default process priority. */
 	#define NZERO 20
+
+	/* Default process ticket amount. */
+	#define TZERO 20
 	
 	/* Maximum number of links to a single file. */
 	#define LINK_MAX 8
