@@ -369,6 +369,13 @@ static int sched_test3(void)
 	return (0);
 }
 
+/**
+ * @brief Scheduling test 4.
+ * 
+ * @details Spawns two processes with different nice priorities and makes sure the most prioritary finishes fisrt.
+ * 
+ * @returns Zero if passed on test, and non-zero otherwise.
+ */
 static int sched_test4(void)
 {
 	pid_t pid;
@@ -396,7 +403,7 @@ static int sched_test4(void)
 		lastarrived = 2;
 	}
 
-	if (lastarrived == 2)
+	if (lastarrived == 1)
 	{
 		_exit(EXIT_SUCCESS);
 	}

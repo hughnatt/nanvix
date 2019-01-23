@@ -60,11 +60,13 @@ PUBLIC void resume(struct process *proc)
 }
 
 /**
- * @brief Calculate the mixed-priority of a process
+ * @brief Calculate the mixed-priority of a process.
+ * 
+ * @return Priority value. The lower value,the higher priority.
  */
 PUBLIC int priority(struct process *proc)
 {
-	return (- proc->priority - proc->nice + proc->counter );
+	return (proc->priority + proc->nice - proc->counter);
 }
 
 /**
@@ -106,7 +108,7 @@ PUBLIC void yield(void)
 		 * Process with higher
 		 * waiting time found.
 		 */
-		if (priority(p) > priority(next))
+		if (priority(p) < priority(next))
 		{
 			next->counter++;
 			next = p;
