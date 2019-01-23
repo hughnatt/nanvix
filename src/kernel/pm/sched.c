@@ -53,10 +53,18 @@ PUBLIC void stop(void)
  * @note The process must stopped to be resumed.
  */
 PUBLIC void resume(struct process *proc)
-{	
+{
 	/* Resume only if process has stopped. */
 	if (proc->state == PROC_STOPPED)
 		sched(proc);
+}
+
+/**
+ * @brief Calculate the mixed-priority of a process
+ */
+PUBLIC int priority(struct process *proc)
+{
+	return (- proc->priority - proc->nice + proc->counter );
 }
 
 /**
@@ -64,7 +72,7 @@ PUBLIC void resume(struct process *proc)
  */
 PUBLIC void yield(void)
 {
-	struct process *p;    /* Working process.     */
+	struct process *p;	/* Working process.     */
 	struct process *next; /* Next process to run. */
 
 	/* Re-schedule process for execution. */
@@ -80,7 +88,7 @@ PUBLIC void yield(void)
 		/* Skip invalid processes. */
 		if (!IS_VALID(p))
 			continue;
-		
+
 		/* Alarm has expired. */
 		if ((p->alarm) && (p->alarm < ticks))
 			p->alarm = 0, sndsig(p, SIGALRM);
@@ -93,17 +101,17 @@ PUBLIC void yield(void)
 		/* Skip non-ready process. */
 		if (p->state != PROC_READY)
 			continue;
-		
+
 		/*
 		 * Process with higher
 		 * waiting time found.
 		 */
-		if (p->counter > next->counter)
+		if (priority(p) > priority(next))
 		{
 			next->counter++;
 			next = p;
 		}
-			
+
 		/*
 		 * Increment waiting
 		 * time of process.
@@ -111,10 +119,11 @@ PUBLIC void yield(void)
 		else
 			p->counter++;
 	}
-	
+
 	/* Switch to next process. */
 	next->priority = PRIO_USER;
 	next->state = PROC_RUNNING;
 	next->counter = PROC_QUANTUM;
+
 	switch_to(next);
 }
