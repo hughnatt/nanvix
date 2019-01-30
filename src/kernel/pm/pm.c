@@ -68,8 +68,9 @@ PUBLIC unsigned nprocs = 0;
 
 /**
  * @brief Track if a tickets is assigned to a process or not
+ *        Contains the pid of the owner
  */
-PUBLIC int ticket_status[NTICKETS] = {0};
+PUBLIC pid_t ticket_status[NTICKETS];
 
 /**
  * @brief Will try to assign amount tickets to process p.
@@ -84,13 +85,13 @@ PUBLIC int get_tickets(struct process *p, int amount)
 	for (int i = 0; ((i < NTICKETS) && (p->ticket_amount < amount)); i++)
 	{
 		/*Ticket already in use*/
-		if (ticket_status[i] == 1)
+		if (ticket_status[i] != -1)
 		{
 			continue;
 		}
 
 		/* Ticket not in use, assign it*/
-		ticket_status[i] = 1;
+		ticket_status[i] = p->pid;
 		p->tickets[p->ticket_amount++] = i;
 	}
 
@@ -103,7 +104,7 @@ PUBLIC int get_tickets(struct process *p, int amount)
 PUBLIC void yield_tickets(struct process *p)
 {
 	for (int i = 0; i < p->ticket_amount; i++){
-		ticket_status[p->tickets[i]] = 0;
+		ticket_status[p->tickets[i]] = -1;
 	}
 
 	p->ticket_amount = 0;
@@ -120,6 +121,10 @@ PUBLIC void pm_init(void)
 	/* Initialize the process table. */
 	for (p = FIRST_PROC; p <= LAST_PROC; p++)
 		p->flags = 0, p->state = PROC_DEAD;
+
+	/* Initialize the ticket table. */
+	for (i = 0; i < NTICKETS ; i++)
+		ticket_status[i] = -1;
 
 	/* Handcraft init process. */
 	IDLE->cr3 = (dword_t)idle_pgdir;

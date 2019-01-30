@@ -287,7 +287,7 @@ static int sched_test1(void)
 }
 
 /**
- * @brief Scheduling test 1.
+ * @brief Scheduling test 2.
  * 
  * @details Spawns several processes and stresses the scheduler.
  * 

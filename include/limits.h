@@ -27,7 +27,7 @@
 	#define NZERO 20
 
 	/* Default tickets amount. */
-	#define NTICKETS 64
+	#define NTICKETS 1024
 	
 	/* Max tickets amount for a single process */
 	#define TICKETS_MAX 32

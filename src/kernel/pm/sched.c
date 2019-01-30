@@ -91,47 +91,29 @@ PUBLIC void yield(void)
 
 	next = IDLE;
 
-	int found = 0;
-
 	/* Choose randomly a ticket number. */
 	int rticket;
+	/* Find an assigned ticket */
 	do
 	{
-		rticket = krand() % (NTICKETS + 1);
+		rticket = krand() % (NTICKETS);
+	} while (ticket_status[rticket] == -1);
 
-		kprintf("Random : %d\n",rticket);
+	/* Try to find the ticket in the process list */
+	for (p = FIRST_PROC; p <= LAST_PROC; p++)
+	{
 
-		/* Try to find the ticket in the process list */
-		for (p = FIRST_PROC; p <= LAST_PROC; p++)
+		/* This is the process we're looking for. */
+		if (p->pid == ticket_status[rticket])
 		{
 			/* Skip non-ready process. */
 			if (p->state != PROC_READY)
-				continue;
-
-			kprintf("%s\t",p->name);
-
-			/* For each process, loop on the tickets*/
-			for (int i = 0; i < p->ticket_amount; i++)
-			{
-				/* Found !*/
-				kprintf("%d ",p->tickets[i]);
-				if (p->tickets[i] == rticket)
-				{
-					next = p;
-					found = 1;
-					break;
-				}
-			}
-
-			kprintf("\n");
-
-			if (found)
-			{
 				break;
-			}
+
+			next = p;
+			break;
 		}
-		
-	} while (!found);
+	}
 
 	/* Switch to next process. */
 	next->priority = PRIO_USER;
