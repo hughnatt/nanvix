@@ -202,9 +202,10 @@
     	int priority;            /**< Process priorities.     */
     	int nice;                /**< Nice for scheduling.    */
     	unsigned alarm;          /**< Alarm.                  */
-		unsigned ticket;		 /**< Ticket.                 */
 		struct process *next;    /**< Next process in a list. */
 		struct process **chain;  /**< Sleeping chain.         */
+		int ticket_amount;       /**< Ticket amount>          */
+		int tickets[TICKETS_MAX];/**< Tickets.                */
 		/**@}*/
 	};
 	
@@ -212,6 +213,8 @@
 	EXTERN void bury(struct process *);
 	EXTERN void die(int);
 	EXTERN int issig(void);
+	EXTERN int get_tickets(struct process *, int);
+	EXTERN void yield_tickets(struct process *);
 	EXTERN void pm_init(void);
 	EXTERN void sched(struct process *);
 	EXTERN void sleep(struct process **, int);
@@ -280,6 +283,7 @@
 	EXTERN struct process *last_proc;
 	EXTERN pid_t next_pid;
 	EXTERN unsigned nprocs;
+	EXTERN int ticket_status[NTICKETS];
 
 #endif /* _ASM_FILE */
 

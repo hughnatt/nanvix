@@ -152,9 +152,11 @@ found:
 	proc->priority = curr_proc->priority;
 	proc->nice = curr_proc->nice;
 	proc->alarm = 0;
-	proc->ticket = curr_proc->ticket;
 	proc->next = NULL;
 	proc->chain = NULL;
+	proc->ticket_amount = 0;
+	if (!get_tickets(proc,5))
+		goto error0;
 	sched(proc);
 
 	curr_proc->nchildren++;

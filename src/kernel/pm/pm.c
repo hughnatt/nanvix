@@ -67,17 +67,60 @@ PUBLIC pid_t next_pid = 0;
 PUBLIC unsigned nprocs = 0;
 
 /**
+ * @brief Track if a tickets is assigned to a process or not
+ */
+PUBLIC int ticket_status[NTICKETS] = {0};
+
+/**
+ * @brief Will try to assign amount tickets to process p.
+ * @returns How many tickets have been assigned
+ */
+PUBLIC int get_tickets(struct process *p, int amount)
+{
+	if (amount > TICKETS_MAX){
+		amount = TICKETS_MAX;
+	}
+
+	for (int i = 0; ((i < NTICKETS) && (p->ticket_amount < amount)); i++)
+	{
+		/*Ticket already in use*/
+		if (ticket_status[i] == 1)
+		{
+			continue;
+		}
+
+		/* Ticket not in use, assign it*/
+		ticket_status[i] = 1;
+		p->tickets[p->ticket_amount++] = i;
+	}
+
+	return p->ticket_amount;
+}
+
+/**
+ * @brief Process p give back all of its tickets
+ */
+PUBLIC void yield_tickets(struct process *p)
+{
+	for (int i = 0; i < p->ticket_amount; i++){
+		ticket_status[p->tickets[i]] = 0;
+	}
+
+	p->ticket_amount = 0;
+}
+
+/**
  * @brief Initializes the process management system.
  */
 PUBLIC void pm_init(void)
-{	
-	int i;             /* Loop index.      */
+{
+	int i;			   /* Loop index.      */
 	struct process *p; /* Working process. */
-	
+
 	/* Initialize the process table. */
 	for (p = FIRST_PROC; p <= LAST_PROC; p++)
 		p->flags = 0, p->state = PROC_DEAD;
-		
+
 	/* Handcraft init process. */
 	IDLE->cr3 = (dword_t)idle_pgdir;
 	IDLE->intlvl = 1;
@@ -100,7 +143,7 @@ PUBLIC void pm_init(void)
 	IDLE->status = 0;
 	IDLE->nchildren = 0;
 	IDLE->uid = SUPERUSER;
-	IDLE->euid = SUPERUSER;
+	IDLE->euid = SUPERUSER;	
 	IDLE->suid = SUPERUSER;
 	IDLE->gid = SUPERGROUP;
 	IDLE->egid = SUPERGROUP;
@@ -118,10 +161,11 @@ PUBLIC void pm_init(void)
 	IDLE->priority = PRIO_USER;
 	IDLE->nice = NZERO;
 	IDLE->alarm = 0;
-	IDLE->ticket = TZERO;
 	IDLE->next = NULL;
 	IDLE->chain = NULL;
-	
+	IDLE->ticket_amount = 0;
+	get_tickets(IDLE,5);
+
 	nprocs++;
 
 	enable_interrupts();

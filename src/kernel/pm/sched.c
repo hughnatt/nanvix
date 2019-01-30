@@ -88,32 +88,50 @@ PUBLIC void yield(void)
 	}
 
 	/* Choose a process to run next. */
+
 	next = IDLE;
-	unsigned ready_tickets = 0;
-	for (p = FIRST_PROC; p <= LAST_PROC; p++)
+
+	int found = 0;
+
+	/* Choose randomly a ticket number. */
+	int rticket;
+	do
 	{
-		/* Skip non-ready process. */
-		if (p->state != PROC_READY)
-			continue;
+		rticket = krand() % (NTICKETS + 1);
 
-		ready_tickets += p->ticket;
-	}
+		kprintf("Random : %d\n",rticket);
 
-	unsigned rticket = krand()%(ready_tickets-1);
-	unsigned cdn = 0;
-	for (p = FIRST_PROC; p <= LAST_PROC; p++)
-	{
-		/* Skip non-ready process. */
-		if (p->state != PROC_READY)
-			continue;
+		/* Try to find the ticket in the process list */
+		for (p = FIRST_PROC; p <= LAST_PROC; p++)
+		{
+			/* Skip non-ready process. */
+			if (p->state != PROC_READY)
+				continue;
 
-		cdn += p->ticket;
+			kprintf("%s\t",p->name);
 
-		if (rticket <= cdn){
-			next = p;
-			break;
+			/* For each process, loop on the tickets*/
+			for (int i = 0; i < p->ticket_amount; i++)
+			{
+				/* Found !*/
+				kprintf("%d ",p->tickets[i]);
+				if (p->tickets[i] == rticket)
+				{
+					next = p;
+					found = 1;
+					break;
+				}
+			}
+
+			kprintf("\n");
+
+			if (found)
+			{
+				break;
+			}
 		}
-	}
+		
+	} while (!found);
 
 	/* Switch to next process. */
 	next->priority = PRIO_USER;

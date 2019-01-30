@@ -26,9 +26,12 @@
 	/* Default process priority. */
 	#define NZERO 20
 
-	/* Default process ticket amount. */
-	#define TZERO 20
+	/* Default tickets amount. */
+	#define NTICKETS 64
 	
+	/* Max tickets amount for a single process */
+	#define TICKETS_MAX 32
+
 	/* Maximum number of links to a single file. */
 	#define LINK_MAX 8
 	

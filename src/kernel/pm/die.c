@@ -39,11 +39,16 @@ PUBLIC void die(int status)
 {
 	struct process *p;
 	
+	
+
 	/* Shall not occour. */
 	if (curr_proc == IDLE)
 		kpanic("idle process dying");
 	
+	yield_tickets(curr_proc);
+
 	curr_proc->status = status;
+	
 	
 	/*
 	 * Ignore all signals since, 
