@@ -75,4 +75,9 @@
 	 */
 	#define ULLONG_MAX 18446744073709551615u
 
+	/*
+	* Size of semaphore table
+	*/
+	#define SEM_MAX 64
+
 #endif /* LIMITS_H_ */

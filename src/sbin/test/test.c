@@ -460,7 +460,7 @@ int semaphore_test3(void)
 			SEM_DOWN(mutex);
 			
 			PUT_ITEM(buffer_fd, item);
-				
+
 			SEM_UP(mutex);
 			SEM_UP(full);
 		}
@@ -477,9 +477,9 @@ int semaphore_test3(void)
 		{
 			SEM_DOWN(full);
 			SEM_DOWN(mutex);
-			
+
 			GET_ITEM(buffer_fd, item);
-				
+
 			SEM_UP(mutex);
 			SEM_UP(empty);
 		} while (item != (NR_ITEMS - 1));

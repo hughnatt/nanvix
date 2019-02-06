@@ -1,49 +1,52 @@
 /*
  * Copyright(C) 2011-2016 Pedro H. Penna <pedrohenriquepenna@gmail.com>
- * 
+ *
  * This file is part of Nanvix.
- * 
+ *
  * Nanvix is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Nanvix is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Nanvix. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
 #include <nanvix/const.h>
+#include <nanvix/pm.h>
+#include <sys/sem.h>
 
-#ifndef SEM_H_
-#define SEM_H_
+PUBLIC int sys_semop(int semid, int op) {
 
-	/**
-	 * @brief Comand values for semaphores.
-	 */
-	/**@{*/
-	#define GETVAL   0 /**< Returns the value of a semaphore. */
-	#define SETVAL   1 /**< Sets the value of a semaphore.    */
-	#define IPC_RMID 3 /**< Destroys a semaphore.            */
-	/**@}*/
+    disable_interrupts();
+   
+    if (op < 0) { /* DOWN sem.P() */
 
-	struct semaphore {
-		unsigned key;
-		int val;
-		struct process *waiting;
-	};
+        semtab[semid].val--;
 
-	/* Semaphore table */
-	PUBLIC struct semaphore semtab[SEM_MAX];
+        if (semtab[semid].val < 0) {
+            /**/
+            sleep(&(semtab[semid].waiting), PRIO_IO);
+        }
 
-	/* Forward definitions. */
-	extern int semget(unsigned);
-	extern int semctl(int, int, int);
-	extern int semop(int, int);
+        
+    } else { /* UP sem.V() */
+        semtab[semid].val++;
 
-#endif /* SEM_H_ */
+        if (semtab[semid].val <= 0) {
+            /* Wake up the sleeping process */
+            wakeup(&(semtab[semid].waiting));
+            semtab[semid].waiting = NULL;
+        }
+    }
+
+
+    
+    enable_interrupts();
+    return 0;
+}
