@@ -31,7 +31,7 @@ PUBLIC int sys_semop(int semid, int op) {
 
         if (semtab[semid].val < 0) {
             /**/
-            sleep(&(semtab[semid].waiting), PRIO_IO);
+            sleep(&(semtab[semid].waiting), PRIO_SEM);
         }
 
         
