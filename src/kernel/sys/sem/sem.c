@@ -22,7 +22,7 @@
 #include <limits.h>
 
 /* Semaphore table */
-PUBLIC struct semaphore semtab[SEM_MAX];
+PUBLIC struct semid_ds semtab[SEM_MAX];
 
 /**
  * @brief Initializes the semaphore system.

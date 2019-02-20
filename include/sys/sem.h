@@ -20,6 +20,7 @@
 #include <limits.h>
 #include <nanvix/const.h>
 #include <sys/types.h>
+#include <sys/ipc.h>
 
 #ifndef SEM_H_
 #define SEM_H_
@@ -28,33 +29,44 @@
 	 * @brief Command values for semaphores.
 	 */
 	/**@{*/
-	#define GETNCNT  0
-	#define GETPID   1
-	#define GETVAL   2 /**< Returns the value of a semaphore. */
-	#define GETALL   3
-	#define GETZCNT  4
-	#define SETVAL   5 /**< Sets the value of a semaphore.    */
-	#define SETALL   6 
-	#define IPC_RMID 7 /**< Destroys a semaphore.             */
-	#define IPC_STAT 8
-	#define IPC_SET 9
+	#define GETPID   11
+	#define GETVAL   12 /**< Returns the value of a semaphore. */
+	#define GETALL	 13
+	#define GETNCNT  14
+	#define GETZCNT  15
+	#define SETVAL   16 /**< Sets the value of a semaphore.    */
+	#define SETALL   17
 	/**@}*/
 
 	/**
 	 * @brief flags for semaphores
 	 */
-	#define SEM_UNDO 0
-	#define IPC_NOWAIT 1
+	#define SEM_UNDO 0x1000
+
+	/*
+ * @brief Semaphore structure.
+ */
+	struct semaphore {
+		unsigned short semval; /* Semaphore value. */
+		pid_t          sempid; /* Process ID of last operation. */
+		unsigned short semncnt; 
+		unsigned short semzcnt;
+		unsigned short semadj;
+		struct process *waiting;
+		struct process *waitforzero;
+	};
 	
 	/**
 	 * @brief TODO
 	 */
 	struct semid_ds 
 	{
-		//struct ipc_perm sem_perm;  /* Operation permission structure. */
-		unsigned short  sem_nsems; /* Number of semaphores in set. */
-		time_t          sem_otime; /* Last semop() time. */
-		time_t          sem_ctime; /* Last time changed by semctl. */
+		struct ipc_perm  sem_perm;  /* Operation permission structure. */
+		unsigned short   sem_nsems; /* Number of semaphores in set. */
+		time_t           sem_otime; /* Last semop() time. */
+		time_t           sem_ctime; /* Last time changed by semctl. */
+		struct semaphore* sems;
+		key_t			 key;
 	};
 
 	/**
@@ -73,5 +85,11 @@
 	extern int semctl(int, int, int,...);
 	extern int semget(key_t, int, int);
 	extern int semop(int, struct sembuf * , size_t);
+
+	union semun {
+    	int val;
+    	struct semid_ds *buf;
+    	unsigned short  *array;
+	} arg;
 
 #endif /* SEM_H_ */

@@ -20,27 +20,14 @@
 #include <limits.h>
 #include <nanvix/const.h>
 #include <sys/types.h>
+#include <sys/sem.h>
 
-/*
- * @brief Semaphore structure.
- */
-struct semaphore {
-    unsigned short semval; /* Semaphore value. */
-    pid_t          sempid; /* Process ID of last operation. */
-    unsigned short semncnt; 
-    unsigned short semzcnt;
-    unsigned short semadj;
-    
-    int             key;
-    struct process *waiting;
-    struct process *waitforzero;
-};
 
 
 /*
  * @brief System semaphore array.
  */
-EXTERN struct semaphore semtab[SEM_MAX];
+EXTERN struct semid_ds semtab[SEM_MAX];
 
 /* Forward definitions. */
 EXTERN void sem_init(void);

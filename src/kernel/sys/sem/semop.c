@@ -28,10 +28,11 @@
 PUBLIC int sys_semop(int semid, struct sembuf *sops, size_t nsops) {
     struct sembuf op;
 
-    for (int k = 0; k < nsops; k++) {
+    for (size_t k = 0; k < nsops; k++) {
         op = sops[k];
 
-        struct semaphore sem = semtab[op.sem_num];
+        struct semid_ds ds = semtab[semid];
+        struct semaphore sem = ds.sems[op.sem_num];
         
 
         if (op.sem_op < 0) { /* Taking ressources */
@@ -49,11 +50,11 @@ PUBLIC int sys_semop(int semid, struct sembuf *sops, size_t nsops) {
                 }
 
                 sem.semncnt++;
-                sleep(sem.waiting,PRIO_SEM);
+                sleep(&sem.waiting,PRIO_SEM);
             }
 
         } else if (op.sem_op > 0) { /* Giving back ressources. */
-
+            //TODO : check permission
             sem.semval += op.sem_op;
 
             if (op.sem_flg == SEM_UNDO)
@@ -62,22 +63,25 @@ PUBLIC int sys_semop(int semid, struct sembuf *sops, size_t nsops) {
                 sem.semadj -= op.sem_op;
             }
 
-            wakeup(sem.waiting);
+            wakeup(&sem.waiting);
         } 
         else 
         { 
-            if (op.sem_flg == IPC_NOWAIT) /* Wait-for-zero operation */
-            {
+            if(sem.semval == 0){
                 return -1;
-            } 
-            else 
-            {
-                sleep(semtab[op.sem_num].waitforzero,PRIO_SEM);
+            } else if (op.sem_flg == IPC_NOWAIT) {
+                return -1;
+            } else {
+                sleep(&sem.waitforzero,PRIO_SEM);
             }
         }
 
         /* Successful completion. */
-        op.sem_num = curr_proc.pid;
+        for(int i = 0; i<ds.sem_nsems; i++){
+            ds.sems[i].sempid = curr_proc->pid;
+        }
+        //TODO : set otime at curret time
+        
         
     }
 

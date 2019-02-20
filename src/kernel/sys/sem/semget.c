@@ -20,7 +20,7 @@
 #include <nanvix/const.h>
 #include <nanvix/sem.h>
 #include <limits.h>
-#include <sys/types.h>
+#include <sys/ipc.h>
 
 /*
  * @brief Create or return the semaphore associated with key.
@@ -51,11 +51,25 @@ PUBLIC int sys_semget(key_t key, int nsems, int semflag) {
         if (free_semid == -1){ /* No space available for new semaphore. */
             return -1;
         }
-        semid = free_semid;
 
-        semtab[semid].key = key;
-        semtab[semid].waiting = NULL;
-        semtab[semid].semval = 0;
+        if(semflag == IPC_CREAT){
+            //TODO : attribuer les permissions
+            semid = free_semid;
+
+            semtab[semid].sem_nsems = nsems;
+            semtab[semid].sem_otime = 0;
+            //semtab[semid].sem_ctime = ticks;
+            //TODO : initialiser sem_ctime
+            semtab[semid].key = key;
+            
+            for(int i = 0 ; i<nsems ; i++){
+                struct semaphore temp;
+                temp.semval = 0;
+                semtab[semid].sems[i] = temp;
+            }
+        } else {
+            return -1;
+        }
     }
 
     return semid;
