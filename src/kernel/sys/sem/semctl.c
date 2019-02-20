@@ -26,14 +26,16 @@
 /*
  * @brief Operations on semaphores.
  */
-PUBLIC int sys_semctl(int semid, int cmd, int val){
-    
+PUBLIC int sys_semctl(int semid, int cmd, int val)
+{    
     /* Invalid semaphore entry. */
-    if (semtab[semid].key == 0){
+    if (semtab[semid].key == 0)
+    {
         return -1;
     }
 
-    switch(cmd){
+    switch(cmd)
+    {
         case GETVAL:
             return semtab[semid].val;
         case SETVAL:

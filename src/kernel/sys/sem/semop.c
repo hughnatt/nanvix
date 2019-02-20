@@ -24,14 +24,15 @@
 /*
  * @brief Tries to get 1 ressource from the semaphore.
  */
-PRIVATE void sem_down(int semid) {
-    
+PRIVATE void sem_down(int semid) 
+{    
     disable_interrupts();
 
     semtab[semid].val--;
 
-    if (semtab[semid].val < 0) {
-        /**/
+    if (semtab[semid].val < 0) 
+    {
+        /* No ressources available ATM, sleep and wait. */
         sleep(&(semtab[semid].waiting), PRIO_SEM);
     }
 
@@ -39,18 +40,18 @@ PRIVATE void sem_down(int semid) {
 }
 
 /*
- * @brief Releases 1 ressource and wakes up blocked processes.
+ * @brief Releases 1 ressource and wakes up 1 blocked process.
  */
-PRIVATE void sem_up(int semid) {
-
+PRIVATE void sem_up(int semid) 
+{
     disable_interrupts();
 
     semtab[semid].val++;
 
-    if (semtab[semid].val <= 0) {
+    if (semtab[semid].val <= 0)
+    {
         /* Wake up the sleeping processes. */
-        wakeup(&(semtab[semid].waiting));
-        semtab[semid].waiting = NULL;
+        wakeup_single(&(semtab[semid].waiting));
     }
 
     enable_interrupts();
@@ -59,24 +60,25 @@ PRIVATE void sem_up(int semid) {
 /*
  * @brief Takes and releases semaphore ressources.
  */
-PUBLIC int sys_semop(int semid, int op) {
-
+PUBLIC int sys_semop(int semid, int op) 
+{
     int n;
 
-    if (op < 0) { /* Taking ressources */
-
-        for (n = 0; n > op; n--) {
+    if (op < 0) /* Taking ressources */ 
+    { 
+        for (n = 0; n > op; n--) 
+        {
             sem_down(semid);
         }
 
-    } else if (op > 0) { /* Giving back ressources. */
-        
-        for (n = 0; n < op; n++) {
+    } 
+    else if (op > 0) /* Giving back ressources. */ 
+    { 
+        for (n = 0; n < op; n++) 
+        {
             sem_up(semid);
         }
-
     }
-
     
     return 0;
 }

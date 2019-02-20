@@ -25,29 +25,35 @@
  * @brief Create or return the semaphore associated with key.
  * NB : 0 is an invalid key.
  */
-PUBLIC int sys_semget(unsigned key) {
+PUBLIC int sys_semget(unsigned key)
+{
     int free_semid = -1;
     int semid = -1;
 
-    for (int i = 0; i < SEM_MAX; i++) {
-        
+    for (int i = 0; i < SEM_MAX; i++) 
+    {    
         /* Try to find the key in the table. */
-        if (semtab[i].key != key) {
-            
+        if (semtab[i].key != key) 
+        {    
             /* Looking for free space in case we need to create a new semaphore. */
-            if (free_semid == -1 && semtab[i].key == 0) {
+            if (free_semid == -1 && semtab[i].key == 0) 
+            {
                 free_semid = i;
             }
 
-        } else { /* Key found. */ 
+        } 
+        else /* Key found. */ 
+        {  
             semid = i;
             break;
         }
     }
 
     /* Creation of a semaphore associated with the key. */
-    if (semid == -1) {
-        if (free_semid == -1){ /* No space available for new semaphore. */
+    if (semid == -1) 
+    {
+        if (free_semid == -1) /* No space available for new semaphore. */
+        { 
             return -1;
         }
         semid = free_semid;
