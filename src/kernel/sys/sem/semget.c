@@ -18,13 +18,19 @@
  */
 
 #include <nanvix/const.h>
-#include <sys/sem.h>
+#include <nanvix/sem.h>
+#include <limits.h>
 
+/*
+ * @brief Create or return the semaphore associated with key.
+ * NB : 0 is an invalid key.
+ */
 PUBLIC int sys_semget(unsigned key) {
     int free_semid = -1;
     int semid = -1;
 
     for (int i = 0; i < SEM_MAX; i++) {
+        
         /* Try to find the key in the table. */
         if (semtab[i].key != key) {
             
@@ -33,7 +39,7 @@ PUBLIC int sys_semget(unsigned key) {
                 free_semid = i;
             }
 
-        } else { /* Key found */ 
+        } else { /* Key found. */ 
             semid = i;
             break;
         }
@@ -41,7 +47,7 @@ PUBLIC int sys_semget(unsigned key) {
 
     /* Creation of a semaphore associated with the key. */
     if (semid == -1) {
-        if (free_semid == -1){ /* No space available for new semaphore.*/
+        if (free_semid == -1){ /* No space available for new semaphore. */
             return -1;
         }
         semid = free_semid;

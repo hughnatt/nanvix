@@ -18,10 +18,21 @@
  */
 
 #include <nanvix/const.h>
+#include <nanvix/sem.h>
+
 #include <sys/sem.h>
 
+
+/*
+ * @brief Operations on semaphores.
+ */
 PUBLIC int sys_semctl(int semid, int cmd, int val){
     
+    /* Invalid semaphore entry. */
+    if (semtab[semid].key == 0){
+        return -1;
+    }
+
     switch(cmd){
         case GETVAL:
             return semtab[semid].val;
@@ -34,5 +45,4 @@ PUBLIC int sys_semctl(int semid, int cmd, int val){
         default:
             return -1;
     }
-    
 }

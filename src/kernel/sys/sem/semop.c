@@ -19,34 +19,64 @@
 
 #include <nanvix/const.h>
 #include <nanvix/pm.h>
-#include <sys/sem.h>
+#include <nanvix/sem.h>
 
-PUBLIC int sys_semop(int semid, int op) {
-
+/*
+ * @brief Tries to get 1 ressource from the semaphore.
+ */
+PRIVATE void sem_down(int semid) {
+    
     disable_interrupts();
-   
-    if (op < 0) { /* DOWN sem.P() */
 
-        semtab[semid].val--;
+    semtab[semid].val--;
 
-        if (semtab[semid].val < 0) {
-            /**/
-            sleep(&(semtab[semid].waiting), PRIO_SEM);
-        }
-
-        
-    } else { /* UP sem.V() */
-        semtab[semid].val++;
-
-        if (semtab[semid].val <= 0) {
-            /* Wake up the sleeping process */
-            wakeup(&(semtab[semid].waiting));
-            semtab[semid].waiting = NULL;
-        }
+    if (semtab[semid].val < 0) {
+        /**/
+        sleep(&(semtab[semid].waiting), PRIO_SEM);
     }
 
+    enable_interrupts();
+}
+
+/*
+ * @brief Releases 1 ressource and wakes up blocked processes.
+ */
+PRIVATE void sem_up(int semid) {
+
+    disable_interrupts();
+
+    semtab[semid].val++;
+
+    if (semtab[semid].val <= 0) {
+        /* Wake up the sleeping processes. */
+        wakeup(&(semtab[semid].waiting));
+        semtab[semid].waiting = NULL;
+    }
+
+    enable_interrupts();
+}
+
+/*
+ * @brief Takes and releases semaphore ressources.
+ */
+PUBLIC int sys_semop(int semid, int op) {
+
+    int n;
+
+    if (op < 0) { /* Taking ressources */
+
+        for (n = 0; n > op; n--) {
+            sem_down(semid);
+        }
+
+    } else if (op > 0) { /* Giving back ressources. */
+        
+        for (n = 0; n < op; n++) {
+            sem_up(semid);
+        }
+
+    }
 
     
-    enable_interrupts();
     return 0;
 }
