@@ -26,7 +26,7 @@
 /*
  * @brief Operations on semaphores.
  */
-PUBLIC int sys_semctl(int semid, int cmd, int val){
+PUBLIC int sys_semctl(int semid, int semnum, int cmd, semun arg){
     
     /* Invalid semaphore entry. */
     if (semtab[semid].key == 0){
@@ -35,10 +35,32 @@ PUBLIC int sys_semctl(int semid, int cmd, int val){
 
     switch(cmd){
         case GETVAL:
-            return semtab[semid].val;
+            return semtab[semid].semval;
         case SETVAL:
-            semtab[semid].val = val;
+            semtab[semid].semval = arg.val;
             return 0;
+        case GETPID :
+            return semtab[semid].sempid;
+        case GETNCNT :
+            return semtab[semid].semncnt;
+        case GETZCNT :
+            return semtab[semid].semzcnt;
+
+        case GETALL :
+            for(int i =0;i<SEM_MAX;i++){
+                arg.array[i] = semtab[i].semval;
+            }
+            return 0;
+        case SETALL :
+            for(int i = 0; i<SEM_MAX;i++){
+                semtab[i].semval = arg.array[i];
+            }
+            return 0;
+        case IPC_STAT :
+            return 0;
+        case IPC_SET :
+            return 0;
+
         case IPC_RMID:
             semtab[semid].key = 0;
             return 0;

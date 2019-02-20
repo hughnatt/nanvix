@@ -20,12 +20,13 @@
 #include <nanvix/const.h>
 #include <nanvix/sem.h>
 #include <limits.h>
+#include <sys/types.h>
 
 /*
  * @brief Create or return the semaphore associated with key.
  * NB : 0 is an invalid key.
  */
-PUBLIC int sys_semget(unsigned key) {
+PUBLIC int sys_semget(key_t key, int nsems, int semflag) {
     int free_semid = -1;
     int semid = -1;
 
@@ -54,7 +55,7 @@ PUBLIC int sys_semget(unsigned key) {
 
         semtab[semid].key = key;
         semtab[semid].waiting = NULL;
-        semtab[semid].val = 0;
+        semtab[semid].semval = 0;
     }
 
     return semid;

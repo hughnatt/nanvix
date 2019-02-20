@@ -20,63 +20,67 @@
 #include <nanvix/const.h>
 #include <nanvix/pm.h>
 #include <nanvix/sem.h>
+#include <sys/sem.h>
 
 /*
- * @brief Tries to get 1 ressource from the semaphore.
+ * @brief System V semaphore operations.
  */
-PRIVATE void sem_down(int semid) {
-    
-    disable_interrupts();
+PUBLIC int sys_semop(int semid, struct sembuf *sops, size_t nsops) {
+    struct sembuf op;
 
-    semtab[semid].val--;
+    for (int k = 0; k < nsops; k++) {
+        op = sops[k];
 
-    if (semtab[semid].val < 0) {
-        /**/
-        sleep(&(semtab[semid].waiting), PRIO_SEM);
-    }
-
-    enable_interrupts();
-}
-
-/*
- * @brief Releases 1 ressource and wakes up blocked processes.
- */
-PRIVATE void sem_up(int semid) {
-
-    disable_interrupts();
-
-    semtab[semid].val++;
-
-    if (semtab[semid].val <= 0) {
-        /* Wake up the sleeping processes. */
-        wakeup(&(semtab[semid].waiting));
-        semtab[semid].waiting = NULL;
-    }
-
-    enable_interrupts();
-}
-
-/*
- * @brief Takes and releases semaphore ressources.
- */
-PUBLIC int sys_semop(int semid, int op) {
-
-    int n;
-
-    if (op < 0) { /* Taking ressources */
-
-        for (n = 0; n > op; n--) {
-            sem_down(semid);
-        }
-
-    } else if (op > 0) { /* Giving back ressources. */
+        struct semaphore sem = semtab[op.sem_num];
         
-        for (n = 0; n < op; n++) {
-            sem_up(semid);
+
+        if (op.sem_op < 0) { /* Taking ressources */
+
+            if (sem.semval >= -op.sem_op){
+                sem.semval += op.sem_op;
+                
+                if (op.sem_flg == SEM_UNDO){
+                    sem.semadj += -op.sem_op;
+                }
+
+            } else {
+                if (op.sem_flg == SEM_UNDO){
+                    return -1;
+                }
+
+                sem.semncnt++;
+                sleep(sem.waiting,PRIO_SEM);
+            }
+
+        } else if (op.sem_op > 0) { /* Giving back ressources. */
+
+            sem.semval += op.sem_op;
+
+            if (op.sem_flg == SEM_UNDO)
+            {
+                /* Substract the value sem_op from the semaphore adjustment value (semadj). */
+                sem.semadj -= op.sem_op;
+            }
+
+            wakeup(sem.waiting);
+        } 
+        else 
+        { 
+            if (op.sem_flg == IPC_NOWAIT) /* Wait-for-zero operation */
+            {
+                return -1;
+            } 
+            else 
+            {
+                sleep(semtab[op.sem_num].waitforzero,PRIO_SEM);
+            }
         }
 
+        /* Successful completion. */
+        op.sem_num = curr_proc.pid;
+        
     }
 
-    
+
     return 0;
 }

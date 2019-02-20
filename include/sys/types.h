@@ -65,6 +65,9 @@
 	
 	/* Used for user IDs. */
 	typedef int uid_t;
+
+	/* Used for semaphore IDs */
+	typedef signed key_t;
 	
 #endif /* _ASM_FILE */
 

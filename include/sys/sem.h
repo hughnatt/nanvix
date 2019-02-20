@@ -19,6 +19,7 @@
 
 #include <limits.h>
 #include <nanvix/const.h>
+#include <sys/types.h>
 
 #ifndef SEM_H_
 #define SEM_H_
@@ -27,14 +28,50 @@
 	 * @brief Command values for semaphores.
 	 */
 	/**@{*/
-	#define GETVAL   0 /**< Returns the value of a semaphore. */
-	#define SETVAL   1 /**< Sets the value of a semaphore.    */
-	#define IPC_RMID 3 /**< Destroys a semaphore.            */
+	#define GETNCNT  0
+	#define GETPID   1
+	#define GETVAL   2 /**< Returns the value of a semaphore. */
+	#define GETALL   3
+	#define GETZCNT  4
+	#define SETVAL   5 /**< Sets the value of a semaphore.    */
+	#define SETALL   6 
+	#define IPC_RMID 7 /**< Destroys a semaphore.             */
+	#define IPC_STAT 8
+	#define IPC_SET 9
 	/**@}*/
 
+	/**
+	 * @brief flags for semaphores
+	 */
+	#define SEM_UNDO 0
+	#define IPC_NOWAIT 1
+	
+	/**
+	 * @brief TODO
+	 */
+	struct semid_ds 
+	{
+		//struct ipc_perm sem_perm;  /* Operation permission structure. */
+		unsigned short  sem_nsems; /* Number of semaphores in set. */
+		time_t          sem_otime; /* Last semop() time. */
+		time_t          sem_ctime; /* Last time changed by semctl. */
+	};
+
+	/**
+	 * @brief TODO
+	 */
+	struct sembuf
+	{
+		unsigned short sem_num; /* Semaphore number. */
+		short          sem_op;  /* Semaphore operation */
+		short          sem_flg; /* Operation flags. */
+	};
+
+	
+
 	/* Forward definitions. */
-	extern int semget(unsigned);
-	extern int semctl(int, int, int);
-	extern int semop(int, int);
+	extern int semctl(int, int, int,...);
+	extern int semget(key_t, int, int);
+	extern int semop(int, struct sembuf * , size_t);
 
 #endif /* SEM_H_ */
