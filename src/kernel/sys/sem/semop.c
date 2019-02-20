@@ -26,8 +26,6 @@
  */
 PRIVATE void sem_down(int semid) 
 {    
-    disable_interrupts();
-
     semtab[semid].val--;
 
     if (semtab[semid].val < 0) 
@@ -35,8 +33,6 @@ PRIVATE void sem_down(int semid)
         /* No ressources available ATM, sleep and wait. */
         sleep(&(semtab[semid].waiting), PRIO_SEM);
     }
-
-    enable_interrupts();
 }
 
 /*
@@ -44,8 +40,6 @@ PRIVATE void sem_down(int semid)
  */
 PRIVATE void sem_up(int semid) 
 {
-    disable_interrupts();
-
     semtab[semid].val++;
 
     if (semtab[semid].val <= 0)
@@ -53,8 +47,6 @@ PRIVATE void sem_up(int semid)
         /* Wake up the sleeping processes. */
         wakeup_single(&(semtab[semid].waiting));
     }
-
-    enable_interrupts();
 }
 
 /*
