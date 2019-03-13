@@ -21,12 +21,16 @@
 #include <nanvix/hal.h>
 #include <nanvix/klib.h>
 #include <nanvix/pm.h>
+#include <nanvix/mm.h>
 
 /* Clock ticks since system initialization. */
 PUBLIC unsigned ticks = 0;
 
 /* Time at system startup. */
 PUBLIC unsigned startup_time = 0;
+
+/* Time until reset R bits */
+PUBLIC unsigned reset = 50;
 
 /*
  * Handles a timer interrupt.
@@ -46,6 +50,14 @@ PRIVATE void do_clock()
 	/* Give up processor time. */
 	if (--curr_proc->counter == 0)
 		yield();
+
+	reset--;
+	if(!reset){
+		
+		reset_frames();
+
+		reset = 50;
+	}
 }
 
 /*

@@ -284,6 +284,20 @@ PRIVATE struct
 	addr_t addr;    /**< Address of the page. */
 } frames[NR_FRAMES] = {{0, 0, 0, 0},  };
 
+
+int lowest(int x, int y){
+	struct pte* x_p = getpte(curr_proc,frames[x].addr);
+	struct pte* y_p = getpte(curr_proc,frames[y].addr);
+	return ((x_p->accessed)<(y_p->accessed))||((x_p->accessed==y_p->accessed)&&(x_p->dirty<y_p->dirty));
+}
+
+int equal(int x, int y){
+	struct pte* x_p = getpte(curr_proc,frames[x].addr);
+	struct pte* y_p = getpte(curr_proc,frames[y].addr);
+	return (x_p->accessed==y_p->accessed && x_p->dirty<y_p->dirty);
+}
+
+
 /**
  * @brief Allocates a page frame.
  * 
@@ -293,12 +307,13 @@ PRIVATE struct
 PRIVATE int allocf(void)
 {
 	int i;      /* Loop index.  */
-	int oldest; /* Oldest page. */
+	int lowestindex; /* Lowest page. */
 	
-	#define OLDEST(x, y) (frames[x].age < frames[y].age)
+	#define LOWEST(x, y) ((x.accessed<y.accessed)||((x.accessed==y.accessed)&&(x.dirty<y.dirty)))
+	#define EQUAL(x, y) ()
 	
 	/* Search for a free frame. */
-	oldest = -1;
+	lowestindex = -1;
 	for (i = 0; i < NR_FRAMES; i++)
 	{
 		/* Found it. */
@@ -313,17 +328,23 @@ PRIVATE int allocf(void)
 				continue;
 			
 			/* Oldest page found. */
-			if ((oldest < 0) || (OLDEST(i, oldest)))
-				oldest = i;
+			if ((lowestindex < 0) || lowest(i,lowestindex)){
+				lowestindex = i;
+			} else if(equal(i,lowestindex)) {
+				if(krand()%2){
+					lowestindex = i;
+				}
+			}
+				
 		}
 	}
 	
 	/* No frame left. */
-	if (oldest < 0)
+	if (lowestindex < 0)
 		return (-1);
 	
 	/* Swap page out. */
-	if (swap_out(curr_proc, frames[i = oldest].addr))
+	if (swap_out(curr_proc, frames[i = lowestindex].addr))
 		return (-1);
 	
 found:		
@@ -794,4 +815,13 @@ error1:
 	unlockreg(reg);
 error0:
 	return (-1);
+}
+
+
+PUBLIC void reset_frames(){
+	for(int i = 0; i < NR_FRAMES; i++){
+		if(frames[i].count>0){
+			(getpte(curr_proc,frames[i].addr))->accessed = 0;
+		}
+	}
 }

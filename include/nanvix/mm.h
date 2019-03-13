@@ -67,6 +67,7 @@
 	EXTERN void putkpg(void *);
 	EXTERN void mm_init(void);
 	EXTERN void *getkpg(int);
+	EXTERN void reset_frames();
 
 #endif /* _ASM_FILE_ */
 	
