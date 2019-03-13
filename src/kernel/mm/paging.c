@@ -309,9 +309,6 @@ PRIVATE int allocf(void)
 	int i;      /* Loop index.  */
 	int lowestindex; /* Lowest page. */
 	
-	#define LOWEST(x, y) ((x.accessed<y.accessed)||((x.accessed==y.accessed)&&(x.dirty<y.dirty)))
-	#define EQUAL(x, y) ()
-	
 	/* Search for a free frame. */
 	lowestindex = -1;
 	for (i = 0; i < NR_FRAMES; i++)
