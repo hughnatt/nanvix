@@ -329,8 +329,6 @@ PRIVATE int allocf(void)
 		if (frames[i].count == 0)
 			goto found;
 	}
-
-	/* No free frame found, someone will pay the price */
 	
 	/* Pointing on the next frame on the clock */
 	nextframe();
