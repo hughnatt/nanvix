@@ -827,3 +827,11 @@ error1:
 error0:
 	return (-1);
 }
+
+PUBLIC void resetframes(){
+	for(int i = 0; i < NR_FRAMES; i++){
+		if(frames[i].count>0){
+			(getpte(curr_proc,frames[i].addr))->accessed = 0;
+		}
+	}
+}
