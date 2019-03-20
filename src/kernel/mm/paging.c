@@ -282,19 +282,16 @@ PRIVATE struct
 	unsigned age;   /**< Age.                 */
 	pid_t owner;    /**< Page owner.          */
 	addr_t addr;    /**< Address of the page. */
-} frames[NR_FRAMES] = {{0, 0, 0, 0},  };
+	int cmpt;		/**< Counter 			  */
+} frames[NR_FRAMES] = {{0, 0, 0, 0, 0},  };
 
 
 int lowest(int x, int y){
-	struct pte* x_p = getpte(curr_proc,frames[x].addr);
-	struct pte* y_p = getpte(curr_proc,frames[y].addr);
-	return ((x_p->accessed)<(y_p->accessed))||((x_p->accessed==y_p->accessed)&&(x_p->dirty<y_p->dirty));
+	return frames[x].cmpt < frames[y].cmpt;
 }
 
 int equal(int x, int y){
-	struct pte* x_p = getpte(curr_proc,frames[x].addr);
-	struct pte* y_p = getpte(curr_proc,frames[y].addr);
-	return (x_p->accessed==y_p->accessed && x_p->dirty<y_p->dirty);
+	return frames[x].cmpt == frames[y].cmpt;
 }
 
 
@@ -307,13 +304,10 @@ int equal(int x, int y){
 PRIVATE int allocf(void)
 {
 	int i;      /* Loop index.  */
-	int lowestindex; /* Lowest page. */
-	
-	#define LOWEST(x, y) ((x.accessed<y.accessed)||((x.accessed==y.accessed)&&(x.dirty<y.dirty)))
-	#define EQUAL(x, y) ()
+	int lowestcmpt; /* Lowest page. */
 	
 	/* Search for a free frame. */
-	lowestindex = -1;
+	lowestcmpt = -1;
 	for (i = 0; i < NR_FRAMES; i++)
 	{
 		/* Found it. */
@@ -328,11 +322,11 @@ PRIVATE int allocf(void)
 				continue;
 			
 			/* Oldest page found. */
-			if ((lowestindex < 0) || lowest(i,lowestindex)){
-				lowestindex = i;
-			} else if(equal(i,lowestindex)) {
+			if ((lowestcmpt < 0) || lowest(i,lowestcmpt)){
+				lowestcmpt = i;
+			} else if(equal(i,lowestcmpt)) {
 				if(krand()%2){
-					lowestindex = i;
+					lowestcmpt = i;
 				}
 			}
 				
@@ -340,11 +334,11 @@ PRIVATE int allocf(void)
 	}
 	
 	/* No frame left. */
-	if (lowestindex < 0)
+	if (lowestcmpt < 0)
 		return (-1);
 	
 	/* Swap page out. */
-	if (swap_out(curr_proc, frames[i = lowestindex].addr))
+	if (swap_out(curr_proc, frames[i = lowestcmpt].addr))
 		return (-1);
 	
 found:		
@@ -823,5 +817,13 @@ PUBLIC void reset_frames(){
 		if(frames[i].count>0){
 			(getpte(curr_proc,frames[i].addr))->accessed = 0;
 		}
+	}
+}
+
+PUBLIC void add_counter(){
+	for(int i = 0; i < NR_FRAMES; i++){
+		frames[i].cmpt = frames[i].cmpt >> 1;
+		//ATTTTEEENNTIIOOOOONNNNN !!!!!
+		frames[i].cmpt = (getpte(curr_proc, frames[i].addr)->accessed << sizeof(unsigned)) | frames[i].cmpt ;
 	}
 }

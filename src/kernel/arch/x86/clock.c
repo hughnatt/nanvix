@@ -54,6 +54,7 @@ PRIVATE void do_clock()
 	reset--;
 	if(!reset){
 		
+		add_counter();
 		reset_frames();
 
 		reset = 50;
