@@ -294,13 +294,13 @@ PRIVATE struct
 
 
 /**
- * @brief
+ * @brief Global page pointer.
  */
 PRIVATE int framepointer;
 
 /**
- * @brief
- * 
+ * @brief Move framepointer to the next candidate frame for replacement.
+ *        We skip frames we don't own or shared frames.
  */
 PRIVATE void nextframe()
 {
