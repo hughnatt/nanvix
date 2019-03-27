@@ -288,10 +288,7 @@ PRIVATE struct
 	unsigned age;   /**< Age.                 */
 	pid_t owner;	/**< Page owner.          */
 	addr_t addr;	/**< Address of the page. */
-} frames[NR_FRAMES] = {
-	{0, 0, 0, 0},
-};
-
+} frames[NR_FRAMES] = {{0, 0, 0, 0},};
 
 /**
  * @brief
@@ -306,7 +303,7 @@ PRIVATE void nextframe()
 {
 	do
 	{
-		framepointer = ((framepointer+1) % NR_FRAMES);
+		framepointer = ((framepointer + 1) % NR_FRAMES);
 	} while ((frames[framepointer].owner != curr_proc->pid) || (frames[framepointer].count > 1));
 }
 
@@ -330,30 +327,56 @@ PRIVATE int allocf(void)
 			goto found;
 	}
 
-	/* No free frame found, someone will pay the price */
-	
-	/* Pointing on the next frame on the clock */
-	nextframe();
+	/* No free frame found */
 
-	addr = frames[framepointer].addr;
-	addr &= PAGE_MASK;
-	pg = getpte(curr_proc, addr);
-
-	while (pg->accessed)
+	unsigned foundpage = FALSE;
+	while (!foundpage)
 	{
-
-		/* Second chance !*/
-		pg->accessed = 0;
-
-		/* Next frame */
+		/* Pointing on the next frame on the clock */
 		nextframe();
 
-		/* Getting pte corresponding to the frame */
 		addr = frames[framepointer].addr;
 		addr &= PAGE_MASK;
 		pg = getpte(curr_proc, addr);
+
+		unsigned usebit = pg->accessed;
+		
+		pg->accessed = 0;
+
+		if (usebit)
+		{
+			frames[framepointer].age = ticks;
+		}
+		else
+		{
+			
+#define TAU 20
+
+			if (ticks - frames[framepointer].age > TAU)
+			{
+				if (!pg->dirty){
+					/* Use this page */
+					frames[framepointer].count = 1;
+	frames[framepointer].age = ticks;
+
+	return (framepointer);
+				} else {
+					/* Scheduler swap_out */
+				}
+			}
+		}
 	}
-	
+
+	/* Tour complet effectué */
+
+	/*Cas 1, un writeback a été prévu, on refait un tour*/
+
+	/*Cas 2, on prend la première page clean*/
+	    /*Cas extrême, pas de page clean, on prend la première qui vient*/
+
+
+
+
 	/* We are now pointing on the frame to replace*/
 
 	if (swap_out(curr_proc, frames[framepointer].addr))
@@ -365,7 +388,7 @@ PRIVATE int allocf(void)
 	return (framepointer);
 
 found:
-	
+
 	frames[i].count = 1;
 	frames[i].age = ticks;
 
@@ -830,10 +853,13 @@ error0:
 	return (-1);
 }
 
-PUBLIC void resetframes(){
-	for(int i = 0; i < NR_FRAMES; i++){
-		if(frames[i].count>0){
-			(getpte(curr_proc,frames[i].addr))->accessed = 0;
+PUBLIC void resetframes()
+{
+	for (int i = 0; i < NR_FRAMES; i++)
+	{
+		if (frames[i].count > 0)
+		{
+			(getpte(curr_proc, frames[i].addr))->accessed = 0;
 		}
 	}
 }
