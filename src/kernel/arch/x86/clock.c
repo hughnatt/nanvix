@@ -21,6 +21,7 @@
 #include <nanvix/hal.h>
 #include <nanvix/klib.h>
 #include <nanvix/pm.h>
+#include <nanvix/mm.h>
 
 /* Clock ticks since system initialization. */
 PUBLIC unsigned ticks = 0;
